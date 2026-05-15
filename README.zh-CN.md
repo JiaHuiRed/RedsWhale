@@ -1,3 +1,15 @@
+# Red-DS-TUI
+
+> **Fork 自 [Hmbown/DeepSeek-TUI](https://github.com/Hmbown/DeepSeek-TUI)，感谢原作者的出色工作。**
+> Red 个人定制版。版本：**v0.0.1**
+
+### 更新日志
+| 版本 | 改动 |
+|------|------|
+| v0.0.1 | 新增块引用渲染支持（Markdown `>` 语法） |
+
+---
+
 # DeepSeek TUI
 
 > **面向 [DeepSeek V4](https://platform.deepseek.com) 的终端原生编程智能体：100 万 token 上下文、思考模式流式推理、前缀缓存感知。自包含 Rust 二进制发布——开箱即带 MCP 客户端、沙箱和持久化任务队列。**

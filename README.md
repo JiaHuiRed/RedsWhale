@@ -1,3 +1,15 @@
+# Red-DS-TUI
+
+> **Fork** of [DeepSeek-TUI](https://github.com/Hmbown/DeepSeek-TUI) by [Hmbown](https://github.com/Hmbown) — thanks to the original authors for their excellent work.
+> Personal customization by Red. Version: **v0.0.1**
+
+### Changelog
+| Version | Change |
+|---------|--------|
+| v0.0.1 | Added blockquote rendering support (`>` markdown syntax) |
+
+---
+
 # DeepSeek TUI
 
 > Terminal coding agent for DeepSeek V4. It runs from the `deepseek` command, streams reasoning blocks, edits local workspaces with approval gates, and includes an auto mode that chooses both model and thinking level per turn.

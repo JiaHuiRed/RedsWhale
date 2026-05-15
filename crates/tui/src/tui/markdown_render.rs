@@ -1,3 +1,4 @@
+// author Red
 //! Markdown rendering for TUI transcript lines.
 //!
 //! ## Width-independent parse vs width-dependent render (CX#6)
@@ -81,6 +82,9 @@ pub enum Block {
     Paragraph { text: String },
     /// An empty source line, preserved so paragraph spacing survives.
     Blank,
+    //#260515 Red 新增块引用Block类型，对应Markdown `>` 语法
+    /// A blockquote line prefixed with `>`.
+    Blockquote { text: String },
 }
 
 /// Width-independent parsed-markdown AST for one cell's source.
@@ -148,6 +152,13 @@ pub fn parse(content: &str) -> ParsedMarkdown {
                 bullet,
                 text: text.to_string(),
             });
+            continue;
+        }
+
+        //#260515 Red 解析块引用语法 `> text`
+        if trimmed.starts_with('>') {
+            let text = trimmed[1..].trim_start().to_string();
+            blocks.push(Block::Blockquote { text });
             continue;
         }
 
@@ -293,6 +304,27 @@ pub fn render_parsed_tagged(
                     line: Line::from(""),
                     is_code: false,
                 });
+            }
+            //#260515 Red 渲染块引用：左侧加 ▌ 竖线，文字用 TEXT_DIM 颜色显示
+            Block::Blockquote { text } => {
+                let rail_style = Style::default().fg(palette::DEEPSEEK_BLUE);
+                let text_style = Style::default().fg(palette::TEXT_DIM);
+                let rail = Span::styled("▌ ", rail_style);
+                let rail_width = 2usize;
+                let inner_width = width.saturating_sub(rail_width).max(1);
+                let wrapped = render_line_with_links(text, inner_width as u16, text_style, text_style);
+                for (j, rendered) in wrapped.into_iter().enumerate() {
+                    let mut spans = if j == 0 {
+                        vec![rail.clone()]
+                    } else {
+                        vec![Span::styled("  ", rail_style)]
+                    };
+                    spans.extend(rendered.spans);
+                    out.push(RenderedMarkdownLine {
+                        line: Line::from(spans),
+                        is_code: false,
+                    });
+                }
             }
             Block::TableRow(_) | Block::TableSeparator => unreachable!(),
         }
