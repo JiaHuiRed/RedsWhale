@@ -1,4 +1,4 @@
-# Red-DS-TUI
+# RedsTui
 
 > **Fork** of [DeepSeek-TUI](https://github.com/Hmbown/DeepSeek-TUI) by [Hmbown](https://github.com/Hmbown) — thanks to the original authors for their excellent work.
 > Personal customization by Red. Version: **v0.1.0**

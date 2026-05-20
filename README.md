@@ -1,4 +1,4 @@
-# Red-DS-TUI
+# RedsTui
 
 > **Fork 自 [Hmbown/DeepSeek-TUI](https://github.com/Hmbown/DeepSeek-TUI)，感谢原作者的出色工作。**
 > 本仓库为 Red 的个人定制版，专为简体中文用户优化。
