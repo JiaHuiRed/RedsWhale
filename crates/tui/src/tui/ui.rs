@@ -4387,7 +4387,11 @@ async fn apply_command_result(
                 let _ = engine_handle.send(Op::ListSubAgents).await;
             }
             AppAction::FetchModels => {
-                if crate::config::provider_passes_model_through(config.api_provider()) {
+                //260520 Red Ollama 支持 /v1/models 接口，允许查询本地模型列表
+                let provider = config.api_provider();
+                let blocks_fetch = crate::config::provider_passes_model_through(provider)
+                    && provider != crate::config::ApiProvider::Ollama;
+                if blocks_fetch {
                     app.add_message(HistoryCell::System {
                         content: format!(
                             "/models is not supported by the {} provider.",
