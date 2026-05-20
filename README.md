@@ -83,18 +83,35 @@ api_key = "sk-your-key-here"
 
 ### Ollama 本地模型
 
-已安装 [Ollama](https://ollama.com) 并在本地运行时，在 `config.toml` 中添加：
+已安装 [Ollama](https://ollama.com) 并在本地运行时：
+
+**第一步：查看本地已有模型**
+```bash
+ollama list
+```
+
+**第二步：在 `config.toml` 末尾追加以下内容**（Windows 路径：`%APPDATA%\deepseek\config.toml`）
 
 ```toml
+# ── Ollama 本地模型配置 ──────────────────────────────────────────
 provider = "ollama"
 
 [providers.ollama]
 base_url = "http://localhost:11434/v1"
-model = "deepseek-r1:8b"   # 替换为 ollama list 中显示的模型名
-# api_key 可选
+model = "deepseek-r1:8b"   # 改为 ollama list 中显示的实际模型名
+# api_key = ""              # Ollama 默认不需要 key，可留空
 ```
 
-切换提供商也可在运行时输入 `/provider ollama`。
+**第三步：运行后可用以下命令操作**
+
+| 命令 | 说明 |
+|------|------|
+| `/models` | 列出本地所有 Ollama 模型 |
+| `/model <名称>` | 直接切换到指定模型 |
+| `/provider deepseek` | 切回 DeepSeek API |
+| `/provider ollama` | 切回 Ollama |
+
+> 如果只想临时用 Ollama 而不改默认 provider，去掉 `provider = "ollama"` 那行，启动后手动 `/provider ollama` 即可。
 
 ---
 
