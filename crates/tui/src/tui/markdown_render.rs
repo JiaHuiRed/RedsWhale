@@ -82,7 +82,7 @@ pub enum Block {
     Paragraph { text: String },
     /// An empty source line, preserved so paragraph spacing survives.
     Blank,
-    //#260515 Red 新增块引用Block类型，对应Markdown `>` 语法
+    //260515 Red 新增块引用Block类型，对应Markdown `>` 语法
     /// A blockquote line prefixed with `>`.
     Blockquote { text: String },
 }
@@ -155,7 +155,7 @@ pub fn parse(content: &str) -> ParsedMarkdown {
             continue;
         }
 
-        //#260515 Red 解析块引用语法 `> text`
+        //260515 Red 解析块引用语法 `> text`
         if trimmed.starts_with('>') {
             let text = trimmed[1..].trim_start().to_string();
             blocks.push(Block::Blockquote { text });
@@ -305,7 +305,7 @@ pub fn render_parsed_tagged(
                     is_code: false,
                 });
             }
-            //#260515 Red 渲染块引用：左侧加 ▌ 竖线，文字用 TEXT_DIM 颜色显示
+            //260515 Red 渲染块引用：左侧加 ▌ 竖线，文字用 TEXT_DIM 颜色显示
             Block::Blockquote { text } => {
                 let rail_style = Style::default().fg(palette::DEEPSEEK_BLUE);
                 let text_style = Style::default().fg(palette::TEXT_DIM);
