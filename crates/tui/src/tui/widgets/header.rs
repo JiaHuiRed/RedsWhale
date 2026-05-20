@@ -293,6 +293,33 @@ impl<'a> HeaderWidget<'a> {
         )]
     }
 
+    //260520 Red 名字动画：随鲸鱼帧同步逐字母亮起（R→Re→Red），亮色为 DEEPSEEK_RED
+    fn red_name_lit_count(frame: Option<&'static str>) -> usize {
+        let Some(f) = frame else { return 0 };
+        let dots = f.chars().filter(|&c| c == '.').count();
+        if f.contains('\u{1F40B}') {
+            // 🐋 whale breached: 0 dots=full(3), 1=2, 2=1, 3+=0
+            3usize.saturating_sub(dots)
+        } else {
+            // 🐳 submerging: 0 dots=1, 1=1, 2=2, 3=3
+            (dots + 1).min(3)
+        }
+    }
+
+    fn red_name_spans(frame: Option<&'static str>) -> Vec<Span<'static>> {
+        let lit = Self::red_name_lit_count(frame);
+        let red_color = palette::DEEPSEEK_RED;
+        let dim_color = palette::TEXT_HINT;
+        let letters: &[(&str, usize)] = &[("R", 1), ("e", 2), ("d", 3)];
+        letters
+            .iter()
+            .map(|&(ch, threshold)| {
+                let color = if lit >= threshold { red_color } else { dim_color };
+                Span::styled(ch, Style::default().fg(color))
+            })
+            .collect()
+    }
+
     fn provider_chip_spans(&self) -> Vec<Span<'static>> {
         let Some(label) = self.data.provider_label else {
             return Vec::new();
@@ -361,6 +388,12 @@ impl<'a> HeaderWidget<'a> {
                 spans.push(Span::raw("  "));
             }
             spans.extend(indicator_spans);
+            //260520 Red 在鲸鱼后插入 "Red" 动画，与鲸鱼帧同步逐字母亮起
+            spans.push(Span::raw(" "));
+            spans.extend(Self::red_name_spans(self.data.status_indicator_frame));
+        } else {
+            //260520 Red 空闲时显示全暗的 "Red"
+            spans.extend(Self::red_name_spans(None));
         }
 
         let effort_spans = self.effort_chip_spans(true);

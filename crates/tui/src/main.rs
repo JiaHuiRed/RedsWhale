@@ -99,14 +99,15 @@ fn configure_windows_console_utf8() {
 #[cfg(not(windows))]
 fn configure_windows_console_utf8() {}
 
+//260520 Red CLI 描述改为 RedsTui 品牌
 #[derive(Parser, Debug)]
 #[command(
-    name = "deepseek-tui",
-    bin_name = "deepseek-tui",
+    name = "redstui-tui",
+    bin_name = "redstui-tui",
     author,
     version = env!("DEEPSEEK_BUILD_VERSION"),
-    about = "DeepSeek TUI/CLI for DeepSeek models",
-    long_about = "Terminal-native TUI and CLI for DeepSeek models.\n\nRun 'deepseek' to start.\n\nNot affiliated with DeepSeek Inc."
+    about = "RedsTui — Red's personal TUI for DeepSeek / Ollama",
+    long_about = "RedsTui: terminal-native TUI and CLI for DeepSeek / Ollama models.\n\nRun 'redstui' to start.\n\nFork of DeepSeek-TUI by Hmbown. Not affiliated with DeepSeek Inc."
 )]
 struct Cli {
     /// Subcommand to run
