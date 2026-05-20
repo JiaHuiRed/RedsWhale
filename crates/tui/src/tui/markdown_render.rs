@@ -319,7 +319,7 @@ pub fn render_parsed_tagged(
                 let rail = Span::styled("▌ ", rail_style);
                 let rail_width = 2usize;
                 let inner_width = width.saturating_sub(rail_width).max(1);
-                let wrapped = render_line_with_links(text, inner_width as u16, text_style, text_style);
+                let wrapped = render_line_with_links(text, inner_width, text_style, text_style);
                 for (j, rendered) in wrapped.into_iter().enumerate() {
                     let mut spans = if j == 0 {
                         vec![rail.clone()]
