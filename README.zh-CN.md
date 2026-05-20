@@ -40,14 +40,14 @@ git clone https://github.com/JiaHuiRed/Red-DS-TUI.git
 cd Red-DS-TUI
 
 # 检查编译（快速验证）
-cargo check -p deepseek-tui
+cargo check -p deepseek-tui   # crate 内部名，暂保持原名
 
 # 完整构建
 cargo build --release
 
 # 可执行文件位于
-# Windows: target/release/deepseek.exe
-# Linux/macOS: target/release/deepseek
+# Windows: target/release/redstui.exe
+# Linux/macOS: target/release/redstui
 ```
 
 ### 保持与上游同步

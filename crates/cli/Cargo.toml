@@ -6,21 +6,22 @@ license.workspace = true
 repository.workspace = true
 description = "Codex-style CLI facade for DeepSeek workspace architecture"
 
+#260520 Red 二进制改名为 redstui
 [[bin]]
-name = "deepseek"
+name = "redstui"
 path = "src/main.rs"
 
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
 clap_complete.workspace = true
-deepseek-agent = { path = "../agent", version = "0.8.39" }
-deepseek-app-server = { path = "../app-server", version = "0.8.39" }
-deepseek-config = { path = "../config", version = "0.8.39" }
-deepseek-execpolicy = { path = "../execpolicy", version = "0.8.39" }
-deepseek-mcp = { path = "../mcp", version = "0.8.39" }
-deepseek-secrets = { path = "../secrets", version = "0.8.39" }
-deepseek-state = { path = "../state", version = "0.8.39" }
+deepseek-agent = { path = "../agent", version = "0.1.0" }
+deepseek-app-server = { path = "../app-server", version = "0.1.0" }
+deepseek-config = { path = "../config", version = "0.1.0" }
+deepseek-execpolicy = { path = "../execpolicy", version = "0.1.0" }
+deepseek-mcp = { path = "../mcp", version = "0.1.0" }
+deepseek-secrets = { path = "../secrets", version = "0.1.0" }
+deepseek-state = { path = "../state", version = "0.1.0" }
 chrono.workspace = true
 dirs.workspace = true
 serde.workspace = true
