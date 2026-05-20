@@ -399,9 +399,8 @@ impl<'a> HeaderWidget<'a> {
         let effort_spans = self.effort_chip_spans(true);
         let has_effort = !effort_spans.is_empty();
         if has_effort {
-            if has_provider || has_indicator {
-                spans.push(Span::raw("  "));
-            }
+            //260520 Red Red名字动画始终显示，所以始终加分隔符
+            spans.push(Span::raw("  "));
             spans.extend(effort_spans);
         }
 
