@@ -69,8 +69,10 @@ pub enum Block {
     HeadingRule,
     /// A standalone `---` / `***` / `___` horizontal rule.
     HorizontalRule,
+    //260520 Red 新增 depth 字段支持嵌套列表缩进层级
     /// A bullet (`-`/`*`) or ordered (`1.`) list item with its prefix and body.
-    ListItem { bullet: String, text: String },
+    /// `depth` is 0 for top-level, 1 for one indent (2 spaces), etc.
+    ListItem { bullet: String, text: String, depth: usize },
     /// A line inside a fenced code block. Fences themselves are dropped.
     Code { line: String },
     /// A table row: cells split on `|`.
@@ -147,10 +149,14 @@ pub fn parse(content: &str) -> ParsedMarkdown {
             continue;
         }
 
+        //260520 Red 计算缩进深度以支持嵌套列表，2或4空格为一级
         if let Some((bullet, text)) = parse_list_item(trimmed) {
+            let leading = raw_line.len() - raw_line.trim_start().len();
+            let depth = leading / 2;
             blocks.push(Block::ListItem {
                 bullet,
                 text: text.to_string(),
+                depth,
             });
             continue;
         }
@@ -267,10 +273,11 @@ pub fn render_parsed_tagged(
                     is_code: false,
                 });
             }
-            Block::ListItem { bullet, text } => {
+            //260520 Red 传入 depth 支持嵌套列表缩进渲染
+            Block::ListItem { bullet, text, depth } => {
                 let bullet_style = Style::default().fg(palette::DEEPSEEK_SKY);
                 out.extend(
-                    render_list_line(bullet, text, width, bullet_style, base_style)
+                    render_list_line(bullet, text, width, bullet_style, base_style, *depth)
                         .into_iter()
                         .map(|line| RenderedMarkdownLine {
                             line,
@@ -431,26 +438,36 @@ fn render_wrapped_line_tagged(
     out
 }
 
+//260520 Red 新增 depth 参数，每层缩进2个空格
 fn render_list_line(
     bullet: &str,
     text: &str,
     width: usize,
     bullet_style: Style,
     text_style: Style,
+    depth: usize,
 ) -> Vec<Line<'static>> {
+    let indent = "  ".repeat(depth);
+    let indent_width = indent.width();
     let bullet_prefix = format!("{bullet} ");
     let bullet_width = bullet_prefix.width();
-    let available = width.saturating_sub(bullet_width).max(1);
+    let available = width
+        .saturating_sub(indent_width)
+        .saturating_sub(bullet_width)
+        .max(1);
     let wrapped = render_line_with_links(text, available, text_style, link_style());
 
     let mut out = Vec::new();
     for (idx, line) in wrapped.into_iter().enumerate() {
         if idx == 0 {
-            let mut spans = vec![Span::styled(bullet_prefix.clone(), bullet_style)];
+            let mut spans = vec![
+                Span::raw(indent.clone()),
+                Span::styled(bullet_prefix.clone(), bullet_style),
+            ];
             spans.extend(line.spans);
             out.push(Line::from(spans));
         } else {
-            let mut spans = vec![Span::raw(" ".repeat(bullet_width))];
+            let mut spans = vec![Span::raw(" ".repeat(indent_width + bullet_width))];
             spans.extend(line.spans);
             out.push(Line::from(spans));
         }
@@ -1267,7 +1284,7 @@ mod tests {
             .blocks
             .iter()
             .filter_map(|b| match b {
-                Block::ListItem { bullet, text } => Some((bullet.as_str(), text.as_str())),
+                Block::ListItem { bullet, text, .. } => Some((bullet.as_str(), text.as_str())),
                 _ => None,
             })
             .collect();
