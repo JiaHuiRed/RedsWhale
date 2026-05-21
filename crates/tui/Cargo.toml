@@ -38,8 +38,11 @@ dirs = "6.0.0"
 fd-lock = "4.0.4"
 futures-util = "0.3.31"
 ratatui = "0.30"
+#260521 Red 代码块语法高亮
+syntect = { version = "5", default-features = false, features = ["default-syntaxes", "default-themes", "regex-fancy"] }
 regex = "1.11"
-reqwest = { version = "0.13.1", default-features = false, features = ["blocking", "json", "stream", "multipart", "rustls", "http2", "gzip", "brotli"] }
+#260521 Red 换用 native-tls 避免 aws-lc-sys 在 MinGW UCRT 上的 nanosleep64 链接错误
+reqwest = { version = "0.13.1", default-features = false, features = ["blocking", "json", "stream", "multipart", "native-tls", "http2", "gzip", "brotli"] }
 similar = "2"
 rustyline = "15.0.0"
 serde = { version = "1.0.228", features = ["derive"] }

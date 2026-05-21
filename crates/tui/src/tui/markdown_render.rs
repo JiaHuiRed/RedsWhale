@@ -28,11 +28,51 @@
 #[cfg(test)]
 use std::cell::Cell;
 
-use ratatui::style::{Modifier, Style};
+use std::sync::OnceLock;
+
+use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
+use syntect::easy::HighlightLines;
+use syntect::highlighting::ThemeSet;
+use syntect::parsing::SyntaxSet;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 use crate::palette;
+
+//260521 Red 语法高亮：全局懒加载 SyntaxSet / ThemeSet，避免重复初始化
+static SYNTAX_SET: OnceLock<SyntaxSet> = OnceLock::new();
+static THEME_SET: OnceLock<ThemeSet> = OnceLock::new();
+
+fn syntax_set() -> &'static SyntaxSet {
+    SYNTAX_SET.get_or_init(SyntaxSet::load_defaults_newlines)
+}
+
+fn theme_set() -> &'static ThemeSet {
+    THEME_SET.get_or_init(ThemeSet::load_defaults)
+}
+
+/// Convert syntect RGB color to ratatui Color.
+fn syn_color(c: syntect::highlighting::Color) -> Color {
+    Color::Rgb(c.r, c.g, c.b)
+}
+
+/// Highlight one code line with syntect. Falls back to `fallback_style` on error.
+fn highlight_code_line(
+    line: &str,
+    highlighter: &mut HighlightLines,
+    fallback_style: Style,
+) -> Vec<Span<'static>> {
+    let ss = syntax_set();
+    match highlighter.highlight_line(line, ss) {
+        Ok(ranges) if !ranges.is_empty() => ranges
+            .into_iter()
+            .map(|(syn_style, text)| {
+                Span::styled(text.to_string(), Style::default().fg(syn_color(syn_style.foreground)))
+            })
+            .collect(),
+        _ => vec![Span::styled(line.to_string(), fallback_style)],
+    }
+}
 use crate::tui::osc8;
 
 // Thread-local counter incremented every time `parse` runs. Used by tests to
@@ -73,8 +113,9 @@ pub enum Block {
     /// A bullet (`-`/`*`) or ordered (`1.`) list item with its prefix and body.
     /// `depth` is 0 for top-level, 1 for one indent (2 spaces), etc.
     ListItem { bullet: String, text: String, depth: usize },
-    /// A line inside a fenced code block. Fences themselves are dropped.
-    Code { line: String },
+    //260521 Red 代码块整体存储，含语言标识符供语法高亮使用
+    /// A fenced code block: language hint (may be empty) + all lines.
+    CodeBlock { lang: String, lines: Vec<String> },
     /// A table row: cells split on `|`.
     TableRow(Vec<String>),
     /// A table separator row (`|---|---|`). Kept so the renderer can draw
@@ -123,18 +164,32 @@ pub fn parse(content: &str) -> ParsedMarkdown {
 
     let mut blocks = Vec::new();
     let mut in_code_block = false;
+    //260521 Red 记录当前代码块的语言标识符和累积行
+    let mut code_lang = String::new();
+    let mut code_lines: Vec<String> = Vec::new();
 
     for raw_line in content.lines() {
         let trimmed = raw_line.trim_start();
         if trimmed.starts_with("```") {
-            in_code_block = !in_code_block;
+            if in_code_block {
+                // closing fence — flush accumulated block
+                blocks.push(Block::CodeBlock {
+                    lang: std::mem::take(&mut code_lang),
+                    lines: std::mem::take(&mut code_lines),
+                });
+                in_code_block = false;
+            } else {
+                // opening fence — capture language hint after the backticks
+                let after = trimmed.trim_start_matches('`').trim();
+                code_lang = after.split_whitespace().next().unwrap_or("").to_string();
+                code_lines.clear();
+                in_code_block = true;
+            }
             continue;
         }
 
         if in_code_block {
-            blocks.push(Block::Code {
-                line: raw_line.to_string(),
-            });
+            code_lines.push(raw_line.to_string());
             continue;
         }
 
@@ -192,6 +247,14 @@ pub fn parse(content: &str) -> ParsedMarkdown {
 
         blocks.push(Block::Paragraph {
             text: trimmed.to_string(),
+        });
+    }
+
+    // Flush unclosed code block (streaming: fence not yet received)
+    if in_code_block && !code_lines.is_empty() {
+        blocks.push(Block::CodeBlock {
+            lang: code_lang,
+            lines: code_lines,
         });
     }
 
@@ -285,13 +348,45 @@ pub fn render_parsed_tagged(
                         }),
                 );
             }
-            Block::Code { line } => {
-                let code_style = Style::default()
+            //260521 Red 代码块语法高亮渲染，按语言使用 syntect
+            Block::CodeBlock { lang, lines } => {
+                let fallback_style = Style::default()
                     .fg(palette::DEEPSEEK_SKY)
                     .add_modifier(Modifier::ITALIC);
-                out.extend(render_wrapped_line_tagged(
-                    line, width, code_style, true, true,
-                ));
+                let ss = syntax_set();
+                let ts = theme_set();
+                let syntax = if lang.is_empty() {
+                    ss.find_syntax_plain_text()
+                } else {
+                    ss.find_syntax_by_token(lang)
+                        .or_else(|| ss.find_syntax_by_extension(lang))
+                        .unwrap_or_else(|| ss.find_syntax_plain_text())
+                };
+                let theme = ts
+                    .themes
+                    .get("base16-ocean.dark")
+                    .or_else(|| ts.themes.values().next())
+                    .expect("syntect: no themes loaded");
+                let mut hl = HighlightLines::new(syntax, theme);
+                for line in lines {
+                    let spans = highlight_code_line(line, &mut hl, fallback_style);
+                    // Hard-wrap long lines preserving highlighting
+                    let raw_text: String = spans.iter().map(|s| s.content.as_ref()).collect();
+                    if raw_text.width() <= width {
+                        out.push(RenderedMarkdownLine {
+                            line: Line::from(spans),
+                            is_code: true,
+                        });
+                    } else {
+                        // Line too long: wrap as plain with fallback style
+                        for wrapped in wrap_code_line(&raw_text, width) {
+                            out.push(RenderedMarkdownLine {
+                                line: Line::from(vec![Span::styled(wrapped, fallback_style)]),
+                                is_code: true,
+                            });
+                        }
+                    }
+                }
             }
             Block::Paragraph { text } => {
                 let link_style = Style::default()
@@ -1195,13 +1290,14 @@ mod tests {
     fn fenced_code_block_collected_in_parse() {
         let parsed = parse("text\n```\ncode line one\ncode line two\n```\nmore\n");
         let blocks = &parsed.blocks;
-        // text paragraph, two code lines, more paragraph (fences are dropped)
-        let code_lines: Vec<_> = blocks
+        // text paragraph, one CodeBlock with two lines, more paragraph
+        let code_lines: Vec<&str> = blocks
             .iter()
             .filter_map(|b| match b {
-                Block::Code { line } => Some(line.as_str()),
+                Block::CodeBlock { lines, .. } => Some(lines.as_slice()),
                 _ => None,
             })
+            .flat_map(|lines| lines.iter().map(|l| l.as_str()))
             .collect();
         assert_eq!(code_lines, vec!["code line one", "code line two"]);
     }
