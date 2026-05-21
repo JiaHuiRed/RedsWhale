@@ -7,11 +7,27 @@
 
 ---
 
-## [0.1.0] - 2026-05-20
+## [0.0.3] - 2026-05-21
 
 ### 新增
 
-- **CHANGELOG.zh-CN.md / README.zh-CN.md**：中文文档作为主版本，包含构建指引、Ollama 配置说明。
+- **代码块语法高亮**（`markdown_render.rs`）：fenced code block 现在根据语言标识符（rust / python / js / bash 等）渲染彩色语法高亮，使用 syntect 5 + base16-ocean.dark 主题，颜色以 24-bit RGB 输出到终端。
+
+### 修复
+
+- **MinGW UCRT 链接错误**：将 reqwest TLS 后端从 `rustls`（依赖 aws-lc-sys）换为 `native-tls`（Windows SChannel），修复 WinLibs 16.x POSIX UCRT 下 `nanosleep64` 未定义符号导致的链接失败。
+
+---
+
+## [0.0.2] - 2026-05-20
+
+### 新增
+
+- **嵌套列表渲染**（`markdown_render.rs`）：`Block::ListItem` 新增 `depth` 字段，按缩进层级（每层 2 空格）正确缩进显示多级列表。
+- **Ollama `/models` 支持**（`ui.rs`）：`/models` 命令现在对 Ollama provider 发起实时查询，列出本地已下载的所有模型。
+- **Red 名字动画**（`header.rs`）：标题栏鲸鱼旁显示 R→e→d 逐字母亮起动画，与鲸鱼跃出/落水节奏同步。
+- **品牌统一**：二进制重命名为 `redstui` / `redstui-tui`，界面文字、启动画面、信任对话框全部替换为 RedsTui。
+- **中文文档主版本**：README.md 升级为中文主版本（emoji 标题风格），附 README.en.md 英文版。
 - **版本号体系独立**：启用自有版本号（0.x.x），与上游 0.8.x 分离。
 
 ### 维护

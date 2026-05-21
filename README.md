@@ -3,7 +3,7 @@
 > **Fork 自 [Hmbown/DeepSeek-TUI](https://github.com/Hmbown/DeepSeek-TUI)，感谢原作者的出色工作。**
 > 本仓库为 Red 的个人定制版，专为简体中文用户优化。
 
-[![版本](https://img.shields.io/badge/版本-v0.0.2-blue)](CHANGELOG.zh-CN.md)
+[![版本](https://img.shields.io/badge/版本-v0.0.3-blue)](CHANGELOG.zh-CN.md)
 [![上游同步](https://img.shields.io/badge/上游-v0.8.39-green)](https://github.com/Hmbown/DeepSeek-TUI)
 [![许可证](https://img.shields.io/badge/许可证-MIT-lightgrey)](LICENSE)
 
@@ -20,6 +20,7 @@
 | 改动 | 说明 |
 |------|------|
 | 🐋 品牌动画 | 标题栏鲸鱼动画旁显示 Red 名字逐字母亮起 |
+| 🎨 语法高亮 | 代码块按语言渲染彩色高亮（Rust/Python/JS 等） |
 | 📝 块引用渲染 | Markdown `>` 语法显示 `▌` 竖线轨道 |
 | 📋 嵌套列表 | 多级列表正确缩进显示 |
 | 🦙 Ollama 支持 | `/models` 可列出本地 Ollama 模型 |
