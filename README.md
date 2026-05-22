@@ -7,7 +7,7 @@
 [![上游同步](https://img.shields.io/badge/上游-v0.8.40-green)](https://github.com/Hmbown/DeepSeek-TUI)
 [![许可证](https://img.shields.io/badge/许可证-MIT-lightgrey)](LICENSE)
 
-[English README](README.en.md) | [日本語 README](README.ja-JP.md)
+[English](README.en.md) | [日本語](README.ja-JP.md)
 
 ---
 
