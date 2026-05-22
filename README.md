@@ -95,26 +95,39 @@ ollama list
 
 **第二步：在 `config.toml` 末尾追加以下内容**
 
+配置文件路径：
+- 🪟 **Windows**：`%APPDATA%\deepseek\config.toml`
+- 🐧 **Linux/macOS**：`~/.deepseek/config.toml`
+
 ```toml
 # ── Ollama 本地模型配置 ──────────────────────────────────────────
 provider = "ollama"
 
 [providers.ollama]
 base_url = "http://localhost:11434/v1"
-model = "deepseek-r1:8b"   # 改为 ollama list 中显示的实际模型名
-# api_key = ""              # Ollama 默认不需要 key，可留空
+model = "qwen3.5:9b"   # 改为 ollama list 中显示的实际模型名
+# api_key = ""          # Ollama 默认不需要 key，可留空
 ```
 
-**第三步：运行后可用以下命令操作**
+**第三步：启动 RedsTui**
+```bash
+target/debug/redstui-tui.exe   # Windows debug 版
+# 或
+target/release/redstui-tui.exe # Windows release 版
+```
+
+启动后底部状态栏会显示当前模型名，确认已切换至 Ollama。
+
+**第四步：TUI 内常用命令**
 
 | 命令 | 说明 |
 |------|------|
-| `/models` | 列出本地所有 Ollama 模型 |
-| `/model <名称>` | 直接切换到指定模型 |
-| `/provider deepseek` | 切回 DeepSeek API |
-| `/provider ollama` | 切回 Ollama |
+| `/models` | 列出本地所有已下载的 Ollama 模型 |
+| `/model <名称>` | 切换到指定模型（如 `/model qwen3:14b`） |
+| `/provider deepseek` | 切回 DeepSeek 云端 API |
+| `/provider ollama` | 切回本地 Ollama |
 
-> 💡 只想临时用 Ollama？去掉 `provider = "ollama"` 那行，启动后手动 `/provider ollama` 即可。
+> 💡 只想临时用 Ollama？去掉 `provider = "ollama"` 那行，启动后手动 `/provider ollama` 即可，不影响默认配置。
 
 ---
 
