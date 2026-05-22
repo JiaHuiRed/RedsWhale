@@ -478,13 +478,30 @@ pub(crate) fn footer_context_percent_spans(app: &App) -> Vec<Span<'static>> {
 
 pub(crate) fn footer_cost_spans(app: &App) -> Vec<Span<'static>> {
     let displayed_cost = app.displayed_session_cost_for_currency(app.cost_currency);
-    if !should_show_footer_cost(displayed_cost) {
+    let total_tokens = app.session.total_tokens;
+    let has_cost = should_show_footer_cost(displayed_cost);
+    let has_tokens = total_tokens > 0;
+
+    if !has_cost && !has_tokens {
         return Vec::new();
     }
-    vec![Span::styled(
-        app.format_cost_amount(displayed_cost),
-        Style::default().fg(palette::TEXT_MUTED),
-    )]
+
+    //260522 Red token 数+费用合并显示，格式：1.2k tkn · $0.03
+    let mut text = String::new();
+    if has_tokens {
+        text.push_str(&format!(
+            "{} tkn",
+            format_token_count_compact(u64::from(total_tokens))
+        ));
+    }
+    if has_cost {
+        if has_tokens {
+            text.push_str(" · ");
+        }
+        text.push_str(&app.format_cost_amount(displayed_cost));
+    }
+
+    vec![Span::styled(text, Style::default().fg(palette::TEXT_MUTED))]
 }
 
 pub(crate) fn should_show_footer_cost(displayed_cost: f64) -> bool {
