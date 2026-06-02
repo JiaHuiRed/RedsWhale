@@ -1,9 +1,9 @@
-# 🐳 RedsTui
+# 🐳 RedsWhale
 
 > **Fork 自 [Hmbown/DeepSeek-TUI](https://github.com/Hmbown/DeepSeek-TUI)，感谢原作者的出色工作。**
 > 本仓库为 Red 的个人定制版，专为简体中文用户优化。
 
-[![版本](https://img.shields.io/badge/版本-v0.0.5-blue)](CHANGELOG.zh-CN.md)
+[![版本](https://img.shields.io/badge/版本-v0.0.6-blue)](CHANGELOG.zh-CN.md)
 [![上游同步](https://img.shields.io/badge/上游-v0.8.40-green)](https://github.com/Hmbown/DeepSeek-TUI)
 [![许可证](https://img.shields.io/badge/许可证-MIT-lightgrey)](LICENSE)
 
@@ -29,16 +29,18 @@
 
 ---
 
-## 🔨 从源码构建
+## 🚀 安装
+
+### 从源码构建
 
 本仓库**不提供预编译二进制**，需要自行编译。
 
-### 前置条件
+#### 前置条件
 
 - Rust 1.88+（通过 [rustup.rs](https://rustup.rs) 安装）
 - Windows 用户需安装 [WinLibs MinGW-w64](https://winlibs.com)（提供 GNU 工具链）
 
-### 编译步骤
+#### 编译步骤
 
 ```bash
 # 克隆仓库
@@ -52,9 +54,35 @@ cargo build
 cargo build --release
 
 # 可执行文件位于
-# Windows: target/debug/redstui-tui.exe
-# Linux/macOS: target/debug/redstui-tui
+# Windows: target/debug/RedsWhale-tui.exe
+# Linux/macOS: target/debug/RedsWhale-tui
 ```
+
+### 其他安装方式
+
+```bash
+# npm —— 已装 Node 的最方便方式
+npm install -g deepseek-tui
+
+# Cargo —— 无需 Node
+cargo install deepseek-tui-cli --locked   # `deepseek` 入口
+cargo install deepseek-tui     --locked   # `deepseek-tui` TUI 二进制
+
+# Homebrew —— macOS 包管理器
+brew tap Hmbown/deepseek-tui
+brew install deepseek-tui
+
+# Docker —— 预构建发布镜像
+docker volume create deepseek-tui-home
+docker run --rm -it \
+  -e DEEPSEEK_API_KEY="$DEEPSEEK_API_KEY" \
+  -v deepseek-tui-home:/home/deepseek/.deepseek \
+  -v "$PWD:/workspace" \
+  -w /workspace \
+  ghcr.io/hmbown/deepseek-tui:latest
+```
+
+> 中国大陆访问较慢时，npm 可加 `--registry=https://registry.npmmirror.com`。
 
 ### 🔄 保持与上游同步
 
@@ -109,11 +137,11 @@ model = "qwen3.5:9b"   # 改为 ollama list 中显示的实际模型名
 # api_key = ""          # Ollama 默认不需要 key，可留空
 ```
 
-**第三步：启动 RedsTui**
+**第三步：启动 RedsWhale**
 ```bash
-target/debug/redstui-tui.exe   # Windows debug 版
+target/debug/RedsWhale-tui.exe   # Windows debug 版
 # 或
-target/release/redstui-tui.exe # Windows release 版
+target/release/RedsWhale-tui.exe # Windows release 版
 ```
 
 启动后底部状态栏会显示当前模型名，确认已切换至 Ollama。
@@ -131,19 +159,81 @@ target/release/redstui-tui.exe # Windows release 版
 
 ---
 
+## 🎯 使用方式
+
+```bash
+RedsWhale                                         # 交互式 TUI
+RedsWhale "explain this function"                # 一次性提示
+RedsWhale exec --auto --output-format stream-json "fix this bug"  # 面向后端集成的 NDJSON 流
+RedsWhale exec --resume <SESSION_ID> "follow up"  # 继续非交互会话
+RedsWhale --model deepseek-v4-flash "summarize"  # 指定模型
+RedsWhale --model auto "fix this bug"            # 自动选择模型 + 推理强度
+RedsWhale --yolo                                  # 自动批准工具
+RedsWhale auth set --provider deepseek           # 保存 API key
+RedsWhale doctor                                  # 检查配置和连接
+RedsWhale doctor --json                           # 机器可读诊断
+RedsWhale models                                  # 列出可用 API 模型
+RedsWhale sessions                                # 列出已保存会话
+RedsWhale resume --last                           # 恢复最近会话
+RedsWhale serve --http                            # HTTP/SSE API 服务
+RedsWhale mcp list                                # 列出已配置 MCP 服务器
+```
+
+---
+
 ## ⌨️ 快捷键
 
 | 按键 | 功能 |
 |------|------|
+| `Tab` | 补全 `/` 或 `@`；运行中则把草稿排队；否则切换模式 |
+| `Shift+Tab` | 切换推理强度：off → high → max |
+| `F1` | 可搜索帮助面板 |
+| `Esc` | 返回 / 关闭 |
+| `Ctrl+K` | 命令面板 |
+| `Ctrl+R` | 恢复旧会话 |
+| `Alt+R` | 搜索提示历史和恢复草稿 |
+| `Ctrl+S` | 暂存当前草稿（`/stash list`、`/stash pop` 恢复） |
+| `@path` | 在输入框中附加文件或目录上下文 |
 | `Enter` | 发送消息 |
 | `Ctrl+J` | 插入换行 |
 | `Ctrl+C` | 中止生成 |
-| `Esc` | 退出 |
-| `/help` | 所有命令 |
-| `/provider` | 切换提供商 |
-| `/model` | 切换模型 |
 
 完整快捷键见 [`docs/KEYBINDINGS.md`](docs/KEYBINDINGS.md)。
+
+---
+
+## 🎭 模式
+
+| 模式 | 行为 |
+|---|---|
+| **Plan** 🔍 | 只读调查；模型先探索并提出计划，然后再做更改 |
+| **Agent** 🤖 | 默认交互模式；多步工具调用带审批门禁 |
+| **YOLO** ⚡ | 在可信工作区自动批准工具；仍会维护计划和清单以保持可见性 |
+
+---
+
+## 📊 模型和价格
+
+| 模型 | 上下文 | 输入（缓存命中） | 输入（缓存未命中） | 输出 |
+|---|---|---|---|---|
+| `deepseek-v4-pro` | 1M | $0.003625 / 1M* | $0.435 / 1M* | $0.87 / 1M* |
+| `deepseek-v4-flash` | 1M | $0.0028 / 1M | $0.14 / 1M | $0.28 / 1M |
+
+*DeepSeek Pro 价格是限时 75% 折扣，有效期到 2026-05-31 15:59 UTC。*
+
+---
+
+## 📚 文档
+
+| 文档 | 主题 |
+|---|---|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 代码库内部结构 |
+| [CONFIGURATION.md](docs/CONFIGURATION.md) | 完整配置参考 |
+| [MODES.md](docs/MODES.md) | Plan / Agent / YOLO 模式 |
+| [MCP.md](docs/MCP.md) | Model Context Protocol 集成 |
+| [INSTALL.md](docs/INSTALL.md) | 各平台安装指南 |
+| [KEYBINDINGS.md](docs/KEYBINDINGS.md) | 完整快捷键目录 |
+| [LOCALIZATION.md](docs/LOCALIZATION.md) | UI 语言矩阵与切换 |
 
 ---
 

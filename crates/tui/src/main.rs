@@ -99,15 +99,15 @@ fn configure_windows_console_utf8() {
 #[cfg(not(windows))]
 fn configure_windows_console_utf8() {}
 
-//260520 Red CLI 描述改为 RedsTui 品牌
+//260520 Red CLI 描述改为 RedsWhale 品牌
 #[derive(Parser, Debug)]
 #[command(
-    name = "redstui-tui",
-    bin_name = "redstui-tui",
+    name = "RedsWhale-tui",
+    bin_name = "RedsWhale-tui",
     author,
     version = env!("DEEPSEEK_BUILD_VERSION"),
-    about = "RedsTui — Red's personal TUI for DeepSeek / Ollama",
-    long_about = "RedsTui: terminal-native TUI and CLI for DeepSeek / Ollama models.\n\nRun 'redstui' to start.\n\nFork of DeepSeek-TUI by Hmbown. Not affiliated with DeepSeek Inc."
+    about = "RedsWhale — Red's personal TUI for DeepSeek / Ollama",
+    long_about = "RedsWhale: terminal-native TUI and CLI for DeepSeek / Ollama models.\n\nRun 'RedsWhale' to start.\n\nFork of DeepSeek-TUI by Hmbown. Not affiliated with DeepSeek Inc."
 )]
 struct Cli {
     /// Subcommand to run
@@ -591,16 +591,16 @@ enum McpCommand {
     Validate,
     /// Register this DeepSeek binary as a local MCP stdio server.
     ///
-    //260520 Red MCP 服务器注册命令文案改为 redstui
-    /// This adds a config entry that runs `redstui serve --mcp` (stdio protocol).
-    /// For the HTTP/SSE runtime API, use `redstui serve --http` directly instead.
+    //260520 Red MCP 服务器注册命令文案改为 RedsWhale
+    /// This adds a config entry that runs `RedsWhale serve --mcp` (stdio protocol).
+    /// For the HTTP/SSE runtime API, use `RedsWhale serve --http` directly instead.
     #[command(
         name = "add-self",
-        long_about = "Register this RedsTui binary as a local MCP stdio server.\n\nAdds a config entry to ~/.deepseek/mcp.json that launches `redstui serve --mcp`\nvia the stdio transport. Other RedsTui sessions (or any MCP client) can then\ndiscover and call tools exposed by this server.\n\nUse `redstui serve --http` instead if you need the HTTP/SSE runtime API."
+        long_about = "Register this RedsWhale binary as a local MCP stdio server.\n\nAdds a config entry to ~/.deepseek/mcp.json that launches `RedsWhale serve --mcp`\nvia the stdio transport. Other RedsWhale sessions (or any MCP client) can then\ndiscover and call tools exposed by this server.\n\nUse `RedsWhale serve --http` instead if you need the HTTP/SSE runtime API."
     )]
     AddSelf {
-        /// Server name in mcp.json (default: "redstui")
-        #[arg(long, default_value = "redstui")]
+        /// Server name in mcp.json (default: "RedsWhale")
+        #[arg(long, default_value = "RedsWhale")]
         name: String,
         /// Workspace directory for the MCP server
         #[arg(long)]
@@ -2989,8 +2989,8 @@ fn list_sessions(limit: usize, search: Option<String>) -> Result<()> {
         println!("{}", "No sessions found.".truecolor(sky_r, sky_g, sky_b));
         println!(
             "Start a new session with: {}",
-            //260520 Red 显示名改为 redstui
-            "redstui".truecolor(blue_r, blue_g, blue_b)
+            //260520 Red 显示名改为 RedsWhale
+            "RedsWhale".truecolor(blue_r, blue_g, blue_b)
         );
         return Ok(());
     }

@@ -1,219 +1,137 @@
-# Contributing to DeepSeek TUI
+# 贡献指南
 
-Thank you for your interest in contributing to DeepSeek TUI! This document provides guidelines and instructions for contributing.
+感谢你对 RedsWhale 项目的关注！本文档提供贡献指南和说明。
 
-## Getting Started
+## 快速开始
 
-### Prerequisites
+### 前置条件
 
-- Rust 1.88 or later (edition 2024)
-- Cargo package manager
+- Rust 1.88 或更高版本（edition 2024）
+- Cargo 包管理器
 - Git
 
-### Setting Up Development Environment
+### 设置开发环境
 
-1. Fork and clone the repository:
+1. Fork 并克隆仓库：
    ```bash
-   git clone https://github.com/YOUR_USERNAME/DeepSeek-TUI.git
-   cd DeepSeek-TUI
+   git clone https://your-username/Red-DS-TUI.git
+   cd Red-DS-TUI
    ```
 
-2. Build the project:
+2. 构建项目：
    ```bash
    cargo build
    ```
 
-3. Run tests:
+3. 运行测试：
    ```bash
    cargo test
    ```
 
-4. Run with development settings:
+4. 开发模式运行：
    ```bash
    cargo run
    ```
 
-## Development Workflow
+## 开发工作流
 
-### Code Style
+### 代码风格
 
-- Run `cargo fmt` before committing to ensure consistent formatting
-- Run `cargo clippy` and address all warnings
-- Follow Rust naming conventions (snake_case for functions/variables, CamelCase for types)
-- Add documentation comments for public APIs
+- 提交前运行 `cargo fmt` 确保格式一致
+- 运行 `cargo clippy` 并处理所有警告
+- 遵循 Rust 命名规范（函数/变量用 snake_case，类型用 CamelCase）
+- 为公共 API 添加文档注释
 
-### Testing
+### 测试
 
-- Write tests for new functionality
-- Ensure all existing tests pass: `cargo test --workspace --all-features`
-- Colocate unit tests beside the code they cover (standard Rust `#[cfg(test)]`
-  modules), and add integration tests under the owning crate's `tests/`
-  directory (for example `crates/tui/tests/` or `crates/state/tests/`). The
-  repository root `tests/` directory is not used
+- 为新功能编写测试
+- 确保所有现有测试通过：`cargo test --workspace --all-features`
+- 将单元测试放在代码旁边（标准 Rust `#[cfg(test)]` 模块），集成测试放在 crate 的 `tests/` 目录下
 
-### Commit Messages
+### 提交信息
 
-Use clear, descriptive commit messages following conventional commits:
+使用约定式提交格式：
+- `feat:` 新功能
+- `fix:` 修复 bug
+- `docs:` 文档更新
+- `style:` 代码格式（不影响功能）
+- `refactor:` 重构
+- `test:` 测试相关
+- `chore:` 构建/工具相关
 
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation changes
-- `refactor:` Code refactoring
-- `test:` Adding or updating tests
-- `chore:` Maintenance tasks
+示例：`feat: 添加 Ollama 本地模型支持`
 
-Example: `feat: add doctor subcommand for system diagnostics`
-
-When a commit harvests code from a community PR (see "How Your Contribution
-Lands" below), include a `Harvested from PR #N by @author` line in the commit
-body. An auto-close workflow watches for this pattern and closes the
-referenced PR with credit so the contributor gets a clear signal that
-their work shipped.
-
-## How Your Contribution Lands
-
-We follow a deliberate "land what's useful, credit the contributor" model
-that occasionally surprises new contributors. Two paths:
-
-### Path 1 — Direct merge
-
-If your PR is well-scoped, passes CI, doesn't touch the trust-boundary
-surface (auth / sandbox / publishing / branding), and doesn't conflict
-with main, a maintainer merges it directly. This is the most common
-outcome for small bug fixes and well-tested feature additions.
-
-### Path 2 — Harvest
-
-If your PR is large, mixes scope, conflicts with main, or needs polish
-that's faster for the maintainer to apply than to round-trip with the
-contributor, the maintainer may **harvest** the useful commits or hunks
-into a new commit on `main` rather than merging the PR directly. This is
-**not a rejection** — it means your code landed.
-
-When this happens:
-
-- The harvested commit's message includes `Harvested from PR #N by
-  @your-handle`. This is the contract: that line is your credit and the
-  signal that your contribution shipped.
-- The `CHANGELOG.md` entry for the next release credits you by handle.
-- The auto-close workflow closes your PR with a templated thank-you and
-  a link to the commit on `main`.
-
-To make a future contribution land via the faster Direct-Merge path
-instead of the Harvest path, the highest-leverage things you can do are:
-
-1. **Keep PRs single-purpose.** One bug fix per PR; one feature per PR.
-   Don't mix a refactor with a feature.
-2. **Rebase onto current `main` before opening the PR**, and after CI
-   feedback. Conflicts force the harvest path even when the change is
-   small.
-3. **Include tests** with new behavior. The maintainer often harvests
-   PRs without tests because adding the test is faster than asking the
-   contributor for one.
-4. **Avoid the trust-boundary surface** without prior maintainer
-   sign-off. That includes auth/credential flows, sandbox policy,
-   publishing/release plumbing, and `prompts/` content. PRs that touch
-   these without prior discussion are unlikely to merge directly even
-   when the change is well-implemented.
-
-## Project Structure
-
-DeepSeek TUI is a Cargo workspace. The live runtime and the majority of TUI,
-engine, and tool code currently live in `crates/tui/src/`. Smaller workspace
-crates provide shared abstractions that are being extracted incrementally.
+## 项目结构
 
 ```
-crates/
-├── tui/           deepseek-tui binary (interactive TUI + runtime API)
-├── cli/           deepseek binary (dispatcher facade)
-├── app-server/    HTTP/SSE + JSON-RPC transport
-├── core/          Agent loop / session / turn management
-├── protocol/      Request/response framing
-├── config/        Config loading, profiles, env precedence
-├── state/         SQLite thread/session persistence
-├── tools/         Typed tool specs and lifecycle
-├── mcp/           MCP client + stdio server
-├── hooks/         Lifecycle hooks (stdout/jsonl/webhook)
-├── execpolicy/    Approval/sandbox policy engine
-├── agent/         Model/provider registry
-└── tui-core/      Event-driven TUI state machine scaffold
+Red-DS-TUI/
+├── crates/
+│   ├── cli/          # CLI 分发器（RedsWhale 命令）
+│   ├── tui/          # TUI 运行时（RedsWhale-tui）
+│   ├── config/       # 配置管理
+│   ├── core/         # 核心引擎
+│   ├── agent/        # 代理功能
+│   ├── mcp/          # MCP 协议支持
+│   ├── tools/        # 工具集
+│   ├── state/        # 状态管理
+│   ├── secrets/      # 密钥管理
+│   ├── hooks/        # 钩子系统
+│   ├── protocol/     # 协议定义
+│   ├── execpolicy/   # 执行策略
+│   ├── tui-core/     # TUI 核心组件
+│   └── app-server/   # 应用服务器
+└── docs/             # 文档
 ```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the live data flow across
-these crates, including the bottom-up build order.
+## 运行命令
 
-## Submitting Changes
-
-1. Create a feature branch from `main`:
-   ```bash
-   git checkout -b feat/your-feature
-   ```
-
-2. Make your changes and commit them
-
-3. Ensure CI passes:
-   ```bash
-   cargo fmt --check
-   cargo clippy
-   cargo test
-   ```
-
-4. Push your branch and create a Pull Request
-
-5. Describe your changes clearly in the PR description
-
-## Pull Request Guidelines
-
-- Keep PRs focused on a single change
-- Update documentation if needed
-- Add tests for new functionality
-- Ensure CI passes before requesting review
-
-## Shape of a Typical PR
-
-A well-structured PR follows a consistent pattern. Recent exemplars include:
-
-- **#386** — `/init` command: new `crates/tui/src/commands/init.rs` module, project-type detection,
-  AGENTS.md generation, command registration in `commands/mod.rs`, localization strings.
-- **#389** — Inline LSP diagnostics: LSP subsystem in `crates/tui/src/lsp/`, engine hooks in
-  `core/engine/lsp_hooks.rs`, config toggle, test coverage.
-- **#387** — Self-update: new `crates/cli/src/update.rs` module, CLI subcommand registration,
-  HTTP download + SHA256 verification + atomic binary replacement.
-- **#393** — `/share` session URL: new `crates/tui/src/commands/share.rs`, HTML rendering,
-  `gh gist create` integration, command registration.
-- **#343/#346** — (v0.8.5) Runtime thread/turn timeline and durable task manager refactors.
-
-Typically each PR touches 1–3 new files, modifies 2–5 existing files for wiring
-(registries, dispatch matches, localization), and adds or updates tests. Changes
-are scoped to a single feature or fix — if you discover related work that needs
-doing, open a separate issue rather than expanding the PR scope.
-
-Before submitting, run:
 ```bash
-cargo fmt --check
-cargo clippy --workspace --all-targets --all-features 2>&1 | head -50
-cargo check
+# 构建
+cargo build
+
+# 测试
+cargo test --workspace --all-features
+
+# Lint
+cargo clippy --workspace --all-targets --all-features
+
+# 格式化
+cargo fmt --all
+
+# 运行 TUI
+cargo run --bin RedsWhale
+
+# 运行 CLI
+cargo run --bin RedsWhale
 ```
 
-## Reporting Issues
+## 报告问题
 
-When reporting issues, please include:
+1. 在 GitHub 上搜索现有 issue
+2. 如果没有找到，创建新 issue
+3. 提供清晰的标题和描述
+4. 包含复现步骤、预期行为和实际行为
+5. 附上环境信息（OS、Rust 版本等）
 
-- Operating system and version
-- Rust version (`rustc --version`)
-- DeepSeek TUI version (`deepseek --version`)
-- Steps to reproduce the issue
-- Expected vs actual behavior
-- Relevant error messages or logs
+## 提交 PR
 
-## Code of Conduct
+1. 从 `main` 分支创建功能分支
+2. 进行修改并测试
+3. 确保所有测试通过
+4. 更新相关文档
+5. 提交 PR 并描述更改内容
 
-Be respectful and inclusive. We welcome contributors of all backgrounds and experience levels.
+## 行为准则
 
-## License
+- 尊重所有参与者
+- 接受建设性批评
+- 专注于对社区最有利的事情
+- 对其他社区成员表示同理心
 
-By contributing to DeepSeek TUI, you agree that your contributions will be licensed under the MIT License.
+## 许可证
 
-## Questions?
+贡献即表示你同意你的贡献将在 MIT 许可证下发布。
 
-Feel free to open an issue for any questions about contributing.
+---
+
+**英文版**: [CONTRIBUTING.en.md](CONTRIBUTING.en.md)

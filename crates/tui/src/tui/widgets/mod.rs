@@ -1926,7 +1926,7 @@ fn build_empty_state_lines(app: &App, area: Rect) -> Vec<Line<'static>> {
 
     let body = vec![
         Line::from(Span::styled(
-            format!("{inset}>_ RedsTui (v{})", env!("CARGO_PKG_VERSION")),
+            format!("{inset}>_ RedsWhale (v{})", env!("CARGO_PKG_VERSION")),
             Style::default().fg(palette::DEEPSEEK_BLUE).bold(),
         )),
         Line::from(""),

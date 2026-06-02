@@ -1,7 +1,7 @@
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║                    RedsWhale 配置文件 (Red's Fork)                           ║
+# ║                         DeepSeek TUI Configuration                            ║
 # ║                                                                              ║
-# ║  Fork 自 DeepSeek TUI，与 DeepSeek Inc. 无隶属关系。                          ║
+# ║  Unofficial CLI for DeepSeek Platform - Not affiliated with DeepSeek Inc.     ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 # See `docs/CONFIGURATION.md` for how config is loaded (profiles, env overrides, etc.).

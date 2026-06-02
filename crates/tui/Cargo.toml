@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Terminal UI for DeepSeek"
-default-run = "redstui-tui"
+default-run = "RedsWhale-tui"
 
 [features]
 default = ["tui", "json", "toml"]
@@ -14,16 +14,16 @@ web = ["dep:schemaui", "schemaui/web", "json", "toml"]
 json = ["schemaui/json"]
 toml = ["schemaui/toml"]
 
-#260520 Red 二进制改名为 redstui-tui
+#260520 Red 二进制改名为 RedsWhale-tui
 [[bin]]
-name = "redstui-tui"
+name = "RedsWhale-tui"
 path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.100"
 arboard = "3.4"
-deepseek-secrets = { path = "../secrets", version = "0.0.5" }
-deepseek-tools = { path = "../tools", version = "0.0.5" }
+deepseek-secrets = { path = "../secrets", version = "0.0.6" }
+deepseek-tools = { path = "../tools", version = "0.0.6" }
 schemaui = { version = "0.12.0", default-features = false, optional = true }
 async-stream = "0.3.6"
 async-trait = "0.1"
@@ -38,10 +38,10 @@ dirs = "6.0.0"
 fd-lock = "4.0.4"
 futures-util = "0.3.31"
 ratatui = "0.30"
-#260521 Red 代码块语法高亮
+#260521 Red 代码块语法高�?
 syntect = { version = "5", default-features = false, features = ["default-syntaxes", "default-themes", "regex-fancy"] }
 regex = "1.11"
-#260521 Red 换用 native-tls 避免 aws-lc-sys 在 MinGW UCRT 上的 nanosleep64 链接错误
+#260521 Red 换用 native-tls 避免 aws-lc-sys �?MinGW UCRT 上的 nanosleep64 链接错误
 reqwest = { version = "0.13.1", default-features = false, features = ["blocking", "json", "stream", "multipart", "native-tls", "http2", "gzip", "brotli"] }
 similar = "2"
 rustyline = "15.0.0"
@@ -90,3 +90,4 @@ objc2-foundation = { version = "0.3.2", default-features = false, features = ["s
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.60", features = ["Win32_Foundation", "Win32_System_Console", "Win32_UI_WindowsAndMessaging", "Win32_System_Diagnostics_Debug"] }
+

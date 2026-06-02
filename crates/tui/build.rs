@@ -119,8 +119,8 @@ fn configure_windows_stack() {
     }
 
     match std::env::var("CARGO_CFG_TARGET_ENV").as_deref() {
-        Ok("msvc") => println!("cargo:rustc-link-arg-bin=redstui-tui=/STACK:8388608"),
-        Ok("gnu") => println!("cargo:rustc-link-arg-bin=redstui-tui=-Wl,--stack,8388608"),
+        Ok("msvc") => println!("cargo:rustc-link-arg-bin=RedsWhale-tui=/STACK:8388608"),
+        Ok("gnu") => println!("cargo:rustc-link-arg-bin=RedsWhale-tui=-Wl,--stack,8388608"),
         _ => {}
     }
 }

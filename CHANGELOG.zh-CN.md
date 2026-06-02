@@ -7,6 +7,16 @@
 
 ---
 
+## [0.0.6] - 2026-06-02
+
+### 变更
+
+- **品牌重命名**：项目从 RedsTui 改名为 RedsWhale，二进制文件名 `redstui` / `redstui-tui` 改为 `RedsWhale` / `RedsWhale-tui`，界面文字、启动画面、信任对话框全部替换为 RedsWhale。
+- **同步上游依赖**：合并上游 v0.8.40 的 Cargo.lock 依赖更新。
+- **文档合并**：将上游中文 README 的安装方式、功能介绍、快捷键、模式说明、模型价格等内容合并到主 README.md。
+
+---
+
 ## [0.0.5] - 2026-05-22
 
 ### 新增
@@ -51,7 +61,7 @@
 - **嵌套列表渲染**（`markdown_render.rs`）：`Block::ListItem` 新增 `depth` 字段，按缩进层级（每层 2 空格）正确缩进显示多级列表。
 - **Ollama `/models` 支持**（`ui.rs`）：`/models` 命令现在对 Ollama provider 发起实时查询，列出本地已下载的所有模型。
 - **Red 名字动画**（`header.rs`）：标题栏鲸鱼旁显示 R→e→d 逐字母亮起动画，与鲸鱼跃出/落水节奏同步。
-- **品牌统一**：二进制重命名为 `redstui` / `redstui-tui`，界面文字、启动画面、信任对话框全部替换为 RedsTui。
+- **品牌统一**：二进制重命名为 `RedsWhale` / `RedsWhale-tui`，界面文字、启动画面、信任对话框全部替换为 RedsWhale。
 - **中文文档主版本**：README.md 升级为中文主版本（emoji 标题风格），附 README.en.md 英文版。
 - **版本号体系独立**：启用自有版本号（0.x.x），与上游 0.8.x 分离。
 
