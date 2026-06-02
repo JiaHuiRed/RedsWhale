@@ -11,9 +11,12 @@
 pub mod apply_patch;
 pub mod approval_cache;
 pub mod arg_repair;
+pub mod ask_user;
 pub mod automation;
 pub mod diagnostics;
 pub mod diff_format;
+pub mod enter_plan_mode;
+pub mod exit_plan_mode;
 pub mod file;
 pub mod file_search;
 pub mod finance;

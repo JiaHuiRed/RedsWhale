@@ -52,6 +52,7 @@ mod pricing;
 mod project_context;
 mod project_doc;
 mod prompts;
+mod jit_context;
 pub mod repl;
 mod retry_status;
 pub mod rlm;
@@ -67,6 +68,7 @@ mod skill_state;
 mod skills;
 mod snapshot;
 mod task_manager;
+mod topic;
 #[cfg(test)]
 mod test_support;
 mod tools;

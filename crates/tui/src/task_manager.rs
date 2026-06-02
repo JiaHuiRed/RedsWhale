@@ -220,6 +220,15 @@ pub struct TaskRecord {
     pub github_events: Vec<TaskGithubEvent>,
     pub tool_calls: Vec<TaskToolCallSummary>,
     pub timeline: Vec<TaskTimelineEntry>,
+    /// IDs of tasks that must complete before this task can start
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub dependencies: Vec<String>,
+    /// ID of the parent task (for subtasks)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<String>,
+    /// IDs of child tasks
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub children: Vec<String>,
 }
 
 /// Lightweight task view.
@@ -867,6 +876,9 @@ impl TaskManager {
                 summary: "Task queued".to_string(),
                 detail_path: None,
             }],
+            dependencies: Vec::new(),
+            parent_id: None,
+            children: Vec::new(),
         };
 
         {
@@ -1483,6 +1495,259 @@ impl TaskManager {
     fn persist_task_locked(&self, task: &TaskRecord) -> Result<()> {
         let path = self.tasks_dir.join(format!("{}.json", task.id));
         write_json_atomic(&path, task)
+    }
+
+    /// Add a dependency to a task. Returns error if it would create a cycle.
+    pub async fn add_dependency(
+        &self,
+        task_id: &str,
+        depends_on_id: &str,
+    ) -> Result<TaskRecord> {
+        let mut state = self.state.lock().await;
+        let id = resolve_task_id(&state.tasks, task_id)?;
+        let dep_id = resolve_task_id(&state.tasks, depends_on_id)?;
+
+        if id == dep_id {
+            bail!("Task cannot depend on itself");
+        }
+
+        // Check for cycles using BFS
+        if self.detect_cycle(&state.tasks, &id, &dep_id) {
+            bail!(
+                "Adding dependency {} → {} would create a cycle",
+                id,
+                dep_id
+            );
+        }
+
+        let task = state
+            .tasks
+            .get_mut(&id)
+            .ok_or_else(|| anyhow!("Task not found: {id}"))?;
+
+        if !task.dependencies.contains(&dep_id) {
+            task.dependencies.push(dep_id.clone());
+            task.timeline.push(TaskTimelineEntry {
+                timestamp: Utc::now(),
+                kind: "dependency_added".to_string(),
+                summary: format!("Now depends on {dep_id}"),
+                detail_path: None,
+            });
+        }
+
+        let updated = task.clone();
+        self.persist_task_locked(&updated)?;
+        Ok(updated)
+    }
+
+    /// Remove a dependency from a task.
+    pub async fn remove_dependency(
+        &self,
+        task_id: &str,
+        depends_on_id: &str,
+    ) -> Result<TaskRecord> {
+        let mut state = self.state.lock().await;
+        let id = resolve_task_id(&state.tasks, task_id)?;
+        let dep_id = resolve_task_id(&state.tasks, depends_on_id)?;
+
+        let task = state
+            .tasks
+            .get_mut(&id)
+            .ok_or_else(|| anyhow!("Task not found: {id}"))?;
+
+        let before = task.dependencies.len();
+        task.dependencies.retain(|d| d != &dep_id);
+
+        if task.dependencies.len() < before {
+            task.timeline.push(TaskTimelineEntry {
+                timestamp: Utc::now(),
+                kind: "dependency_removed".to_string(),
+                summary: format!("No longer depends on {dep_id}"),
+                detail_path: None,
+            });
+        }
+
+        let updated = task.clone();
+        self.persist_task_locked(&updated)?;
+        Ok(updated)
+    }
+
+    /// Add a child task relationship.
+    pub async fn add_child(
+        &self,
+        parent_id: &str,
+        child_id: &str,
+    ) -> Result<TaskRecord> {
+        let mut state = self.state.lock().await;
+        let pid = resolve_task_id(&state.tasks, parent_id)?;
+        let cid = resolve_task_id(&state.tasks, child_id)?;
+
+        if pid == cid {
+            bail!("Task cannot be its own child");
+        }
+
+        // Check for cycles
+        if self.detect_cycle(&state.tasks, &cid, &pid) {
+            bail!(
+                "Adding child relationship {} → {} would create a cycle",
+                pid,
+                cid
+            );
+        }
+
+        // Update parent's children list
+        let parent = state
+            .tasks
+            .get_mut(&pid)
+            .ok_or_else(|| anyhow!("Parent task not found: {pid}"))?;
+        if !parent.children.contains(&cid) {
+            parent.children.push(cid.clone());
+        }
+        let parent = parent.clone();
+
+        // Update child's parent_id
+        let child = state
+            .tasks
+            .get_mut(&cid)
+            .ok_or_else(|| anyhow!("Child task not found: {cid}"))?;
+        child.parent_id = Some(pid.clone());
+        child.timeline.push(TaskTimelineEntry {
+            timestamp: Utc::now(),
+            kind: "parent_set".to_string(),
+            summary: format!("Parent task set to {pid}"),
+            detail_path: None,
+        });
+        let child = child.clone();
+
+        self.persist_task_locked(&parent)?;
+        self.persist_task_locked(&child)?;
+        Ok(child)
+    }
+
+    /// Check if all dependencies of a task are completed.
+    pub async fn dependencies_met(&self, task_id: &str) -> Result<bool> {
+        let state = self.state.lock().await;
+        let id = resolve_task_id(&state.tasks, task_id)?;
+        let task = state
+            .tasks
+            .get(&id)
+            .ok_or_else(|| anyhow!("Task not found: {id}"))?;
+
+        for dep_id in &task.dependencies {
+            if let Some(dep_task) = state.tasks.get(dep_id) {
+                if dep_task.status != TaskStatus::Completed {
+                    return Ok(false);
+                }
+            }
+        }
+        Ok(true)
+    }
+
+    /// Get the dependency graph as an adjacency list.
+    pub async fn dependency_graph(&self) -> HashMap<String, Vec<String>> {
+        let state = self.state.lock().await;
+        state
+            .tasks
+            .values()
+            .map(|t| (t.id.clone(), t.dependencies.clone()))
+            .collect()
+    }
+
+    /// Detect if adding a dependency from `from_id` to `to_id` would create a cycle.
+    /// Uses BFS to check if `to_id` can already reach `from_id`.
+    fn detect_cycle(
+        &self,
+        tasks: &HashMap<String, TaskRecord>,
+        from_id: &str,
+        to_id: &str,
+    ) -> bool {
+        // If to_id can reach from_id through existing dependencies, adding
+        // from_id → to_id would create a cycle.
+        let mut visited = HashSet::new();
+        let mut queue = VecDeque::new();
+        queue.push_back(to_id.to_string());
+
+        while let Some(current) = queue.pop_front() {
+            if current == from_id {
+                return true; // Cycle detected
+            }
+            if !visited.insert(current.clone()) {
+                continue;
+            }
+            if let Some(task) = tasks.get(&current) {
+                for dep in &task.dependencies {
+                    if !visited.contains(dep) {
+                        queue.push_back(dep.clone());
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
+    /// Visualize the task dependency tree as ASCII art.
+    pub async fn visualize_dependencies(&self) -> String {
+        let state = self.state.lock().await;
+        let mut lines = Vec::new();
+        lines.push("Task Dependency Graph:".to_string());
+        lines.push(String::new());
+
+        // Find root tasks (no dependencies)
+        let mut roots: Vec<&TaskRecord> = state
+            .tasks
+            .values()
+            .filter(|t| t.dependencies.is_empty() && t.parent_id.is_none())
+            .collect();
+        roots.sort_by(|a, b| a.id.cmp(&b.id));
+
+        let mut visited = HashSet::new();
+        for root in roots {
+            self.visualize_task_tree(&state.tasks, &root.id, &mut lines, &mut visited, 0);
+        }
+
+        // Tasks not reachable from roots (shouldn't happen with proper cycle detection)
+        for task in state.tasks.values() {
+            if !visited.contains(&task.id) {
+                lines.push(format!("  {} (orphaned)", task.id));
+            }
+        }
+
+        lines.join("\n")
+    }
+
+    fn visualize_task_tree(
+        &self,
+        tasks: &HashMap<String, TaskRecord>,
+        task_id: &str,
+        lines: &mut Vec<String>,
+        visited: &mut HashSet<String>,
+        depth: usize,
+    ) {
+        if !visited.insert(task_id.to_string()) {
+            return;
+        }
+
+        let prefix = "  ".repeat(depth);
+        if let Some(task) = tasks.get(task_id) {
+            let status_icon = match task.status {
+                TaskStatus::Completed => "✓",
+                TaskStatus::Running => "▶",
+                TaskStatus::Failed => "✗",
+                TaskStatus::Canceled => "○",
+                TaskStatus::Queued => "·",
+            };
+            lines.push(format!(
+                "{prefix}{status_icon} {} [{}]",
+                task.id,
+                summarize_text(&task.prompt, 60)
+            ));
+
+            // Show children
+            for child_id in &task.children {
+                self.visualize_task_tree(tasks, child_id, lines, visited, depth + 1);
+            }
+        }
     }
 }
 
