@@ -331,6 +331,15 @@ pub struct Engine {
     /// Diagnostics collected during the current step's tool calls. Drained
     /// and forwarded as a synthetic user message before the next API call.
     pending_lsp_blocks: Vec<crate::lsp::DiagnosticBlock>,
+    /// Cached project context pack (workspace-static). Recomputing this every
+    /// turn busts the KV prefix cache because directory listings and README
+    /// excerpts can change between requests. Cached for the session lifetime
+    /// and only invalidated by explicit session reset.
+    cached_project_context_pack: Option<String>,
+    /// Cached skills block (workspace-static). Same rationale as the project
+    /// context pack — skill discovery walks multiple directories and the
+    /// result should be byte-stable across turns.
+    cached_skills_block: Option<String>,
 }
 
 // === Internal tool helpers ===
@@ -428,6 +437,17 @@ impl Engine {
         // Set up stable system prompt with project context (default to agent mode).
         // Per-turn working-set metadata is injected into the latest user
         // message at request time so file churn does not rewrite this prefix.
+
+        // Pre-cache the workspace-static prompt fragments that would otherwise
+        // be recomputed (and potentially byte-drifting) every turn.
+        let project_context_pack = if config.project_context_pack_enabled {
+            crate::project_context::generate_project_context_pack(&config.workspace)
+        } else {
+            None
+        };
+        let skills_block =
+            crate::skills::render_available_skills_context_for_workspace(&config.workspace);
+
         let user_memory_block =
             crate::memory::compose_block(config.memory_enabled, &config.memory_path);
         let system_prompt =
@@ -445,6 +465,8 @@ impl Engine {
                     translation_enabled: config.translation_enabled,
                 },
                 session.approval_mode,
+                project_context_pack.as_deref(),
+                skills_block.as_deref(),
             );
         let stable_prompt = Some(system_prompt);
         session.last_system_prompt_hash = Some(system_prompt_hash(stable_prompt.as_ref()));
@@ -564,6 +586,8 @@ impl Engine {
             pending_lsp_blocks: Vec::new(),
             workshop_vars,
             sandbox_backend,
+            cached_project_context_pack: project_context_pack,
+            cached_skills_block: skills_block,
         };
         engine.rehydrate_latest_canonical_state();
 
@@ -1820,6 +1844,8 @@ impl Engine {
                 translation_enabled: self.config.translation_enabled,
             },
             self.session.approval_mode,
+            self.cached_project_context_pack.as_deref(),
+            self.cached_skills_block.as_deref(),
         );
         let stable_prompt =
             merge_system_prompts(Some(&base), self.session.compaction_summary_prompt.clone());

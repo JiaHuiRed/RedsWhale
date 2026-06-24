@@ -569,6 +569,8 @@ pub fn system_prompt_for_mode_with_context_skills_and_session(
         instructions,
         session_context,
         default_approval_mode_for_mode(mode),
+        None,
+        None,
     )
 }
 
@@ -580,6 +582,8 @@ pub fn system_prompt_for_mode_with_context_skills_session_and_approval(
     instructions: Option<&[PathBuf]>,
     session_context: PromptSessionContext<'_>,
     approval_mode: ApprovalMode,
+    cached_project_context_pack: Option<&str>,
+    cached_skills_block: Option<&str>,
 ) -> SystemPrompt {
     let mode_prompt = compose_mode_prompt_with_approval(mode, approval_mode);
 
@@ -612,10 +616,14 @@ pub fn system_prompt_for_mode_with_context_skills_session_and_approval(
         full_prompt = format!("{preamble}\n\n{full_prompt}");
     }
 
-    if session_context.project_context_pack_enabled
-        && let Some(pack) = crate::project_context::generate_project_context_pack(workspace)
-    {
-        full_prompt = format!("{full_prompt}\n\n{pack}");
+    if session_context.project_context_pack_enabled {
+        if let Some(pack) = cached_project_context_pack {
+            full_prompt = format!("{full_prompt}\n\n{pack}");
+        } else if let Some(pack) =
+            crate::project_context::generate_project_context_pack(workspace)
+        {
+            full_prompt = format!("{full_prompt}\n\n{pack}");
+        }
     }
 
     // 2.25. Environment block — locale, platform, shell, pwd. All
@@ -650,8 +658,12 @@ pub fn system_prompt_for_mode_with_context_skills_session_and_approval(
     // honoured as a fallback for callers that don't supply a
     // workspace-aware view; it falls through to the same merged
     // registry when available.
-    let skills_block = crate::skills::render_available_skills_context_for_workspace(workspace)
-        .or_else(|| skills_dir.and_then(crate::skills::render_available_skills_context));
+    let skills_block = if let Some(cached) = cached_skills_block {
+        Some(cached.to_string())
+    } else {
+        crate::skills::render_available_skills_context_for_workspace(workspace)
+            .or_else(|| skills_dir.and_then(crate::skills::render_available_skills_context))
+    };
     if let Some(block) = skills_block {
         full_prompt = format!("{full_prompt}\n\n{block}");
     }
@@ -883,6 +895,8 @@ mod tests {
                 translation_enabled: false,
             },
             ApprovalMode::Suggest,
+            None,
+            None,
         ) {
             SystemPrompt::Text(text) => text,
             SystemPrompt::Blocks(_) => panic!("expected text system prompt"),
@@ -952,6 +966,8 @@ mod tests {
                 translation_enabled: false,
             },
             ApprovalMode::Suggest,
+            None,
+            None,
         ) {
             SystemPrompt::Text(text) => text,
             SystemPrompt::Blocks(_) => panic!("expected text system prompt"),
@@ -996,6 +1012,8 @@ mod tests {
                 translation_enabled: false,
             },
             ApprovalMode::Suggest,
+            None,
+            None,
         ) {
             SystemPrompt::Text(text) => text,
             SystemPrompt::Blocks(_) => panic!("expected text system prompt"),

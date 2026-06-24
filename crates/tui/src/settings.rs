@@ -306,7 +306,7 @@ impl Default for Settings {
             sidebar_width_percent: 28,
             sidebar_focus: "auto".to_string(),
             context_panel: false,
-            cost_currency: "usd".to_string(),
+            cost_currency: "cny".to_string(),
             max_input_history: 100,
             default_provider: None,
             default_model: None,
@@ -1168,7 +1168,7 @@ mod tests {
     #[test]
     fn cost_currency_normalizes_yuan_aliases_and_rejects_unknowns() {
         let mut settings = Settings::default();
-        assert_eq!(settings.cost_currency, "usd");
+        assert_eq!(settings.cost_currency, "cny");
 
         settings.set("cost_currency", "yuan").expect("set yuan");
         assert_eq!(settings.cost_currency, "cny");

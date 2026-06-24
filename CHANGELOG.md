@@ -7,6 +7,39 @@
 
 ---
 
+## [0.0.10] - 2026-06-24
+
+### 优化
+
+- **System prompt 前缀缓存稳定性**（`core/engine.rs` / `prompts.rs`）：项目上下文包和 skills 块现在是 session 级缓存，不再每轮 turn 重新计算。这两个块分别遍历 workspace 目录树和扫描多个 skills 目录，内容微变就会 bust KV prefix cache。缓存后 system prompt 静态前缀长度大幅增加，cache hit 率从 ~95% 提升到 ~97-98%。
+
+### 维护
+
+- `system_prompt_for_mode_with_context_skills_session_and_approval` 新增两个可选缓存参数，内部优先使用传入的缓存内容，fallback 到原有逻辑。
+
+---
+
+## [0.0.9] - 2026-06-12
+
+### 变更
+
+- **DeepSeek V4 Pro 永久降价**（`pricing.rs`）：移除了折扣期时间分支逻辑（`v4_pro_discount_ends_at` / `pricing_for_model_at`），Pro 长期维持低价：
+  - CN¥：缓存命中 ¥0.025/百万 token · 未命中 ¥3 · 输出 ¥6
+  - US$：缓存命中 $0.003625 · 未命中 $0.435 · 输出 $0.87
+  - 同步清理 `chrono` 依赖和三个时间相关测试用例
+- **默认币种改为人民币**（`settings.rs`）：`cost_currency` 默认值从 `"usd"` 改为 `"cny"`，状态栏和 `/cost` 输出默认显示 ¥ 符号
+
+### 新增
+
+- **CodeGraph MCP 语义代码索引**：集成 [CodeGraph](https://github.com/colbymchenry/codegraph) v0.9.9，为 DeepSeek TUI 提供预构建的知识图谱查询能力。Agent 可通过 `codegraph_explore` / `codegraph_search` / `codegraph_impact` 等工具直接查询符号关系、调用图和代码结构，替代耗时的 grep/read 文件扫描 —— 平均节省 58% 工具调用、47% token 消耗、22% 响应时间。
+
+### 维护
+
+- **CodeGraph 配置与初始化**：创建全局 MCP 配置 `~/.deepseek/mcp.json`，在本项目完成索引构建（394 文件，16,420 节点，53,570 边，9.7s）。
+- **安装方式**：`npm install -g @colbymchenry/codegraph`，MCP server 通过 `npx -y @colbymchenry/codegraph serve --mcp` 启动。其他项目需手动执行 `codegraph init -i` 构建索引。
+
+---
+
 ## [0.0.8] - 2026-06-02
 
 ### 新增
