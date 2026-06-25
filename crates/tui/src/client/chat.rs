@@ -102,6 +102,11 @@ impl DeepSeekClient {
         {
             body["tool_choice"] = mapped;
         }
+        // 260625 Red: enable parallel tool calls so the model can batch
+        // independent reads/searches into a single turn.
+        if request.tools.is_some() {
+            body["parallel_tool_calls"] = json!(true);
+        }
         apply_reasoning_effort(
             &mut body,
             request.reasoning_effort.as_deref(),
@@ -175,6 +180,11 @@ impl DeepSeekClient {
             && let Some(mapped) = map_tool_choice_for_chat(choice)
         {
             body["tool_choice"] = mapped;
+        }
+        // 260625 Red: enable parallel tool calls so the model can batch
+        // independent reads/searches into a single turn.
+        if request.tools.is_some() {
+            body["parallel_tool_calls"] = json!(true);
         }
         apply_reasoning_effort(
             &mut body,

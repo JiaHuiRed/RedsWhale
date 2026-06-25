@@ -31,7 +31,7 @@ pub const MIN_SUBAGENT_API_TIMEOUT_SECS: u64 = 1;
 /// keeps a misconfigured per-step timeout from masking real model/network
 /// hangs forever.
 pub const MAX_SUBAGENT_API_TIMEOUT_SECS: u64 = 1800;
-pub const DEFAULT_TEXT_MODEL: &str = "deepseek-v4-pro";
+pub const DEFAULT_TEXT_MODEL: &str = "deepseek-v4-flash";
 pub const DEFAULT_DEEPSEEK_BASE_URL: &str = "https://api.deepseek.com/beta";
 pub const DEFAULT_NVIDIA_NIM_MODEL: &str = "deepseek-ai/deepseek-v4-pro";
 pub const DEFAULT_NVIDIA_NIM_FLASH_MODEL: &str = "deepseek-ai/deepseek-v4-flash";

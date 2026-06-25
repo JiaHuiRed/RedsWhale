@@ -7,6 +7,19 @@
 
 ---
 
+## [0.0.11] - 2026-06-25
+
+### 优化
+
+- **默认模型改为 V4 Flash**（`config.rs`）：`DEFAULT_TEXT_MODEL` 从 `deepseek-v4-pro` 改为 `deepseek-v4-flash`。此项目定位为 RedCode 的兜底备用，绝大多数任务用 Flash 足够，成本降低约 3-5x。需要 Pro 时随时 `/model pro` 切换。
+- **显式启用并行 tool call**（`client/chat.rs`）：HTTP 请求体中有工具列表时自动注入 `parallel_tool_calls: true`。允许模型在单次 turn 内并发执行独立的读文件、搜索、grep 等操作，减少 round-trip，加快响应速度。
+
+### 修复
+
+- **内部 crate 版本约束对齐**（各 `Cargo.toml`）：上游 pull 后各 crate 内部依赖仍锁定在 `0.0.9`，导致 `cargo build` 失败。统一升至 `0.0.10`。
+
+---
+
 ## [0.0.10] - 2026-06-24
 
 ### 优化
